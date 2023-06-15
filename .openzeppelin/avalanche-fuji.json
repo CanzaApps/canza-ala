@@ -1,0 +1,188 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x9e9323A82eb74C76CEA47b49c54d3C417cfc8121",
+    "txHash": "0x82064fb3392d5b37c4d035f9ce2ff29d6ee50cc4a5295207376aacdc7d1e4cfe"
+  },
+  "proxies": [
+    {
+      "address": "0xAcEc0dfda6Ae783d46283bfadF07cafB82e2B42b",
+      "txHash": "0xa9b3d0211ab821900cda291538f490c92ce73aebbbbb2732552c242be65ec5d4",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "82aa499c0b1870a167b23b4af80128f6af5fe974226d986aaeb4d3bf71a381bc": {
+      "address": "0x9351d1671eE4328c4D741f80E6Dbf60b75a225f3",
+      "txHash": "0xbf6a57be48e2174182ee7398a907b66b54e2801c41a3f5d926eb25a1f94326f7",
+      "layout": {
+        "solcVersion": "0.8.18",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "auctionPool",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_contract(poolContract)2589",
+            "contract": "Controller",
+            "src": "contracts/Controller.sol:15"
+          },
+          {
+            "label": "auctionId",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_uint256",
+            "contract": "Controller",
+            "src": "contracts/Controller.sol:16"
+          },
+          {
+            "label": "deployments",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "Controller",
+            "src": "contracts/Controller.sol:17"
+          },
+          {
+            "label": "openAuctions",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_mapping(t_uint256,t_struct(auctionData)1734_storage)",
+            "contract": "Controller",
+            "src": "contracts/Controller.sol:27"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(poolContract)2589": {
+            "label": "contract poolContract",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_uint256,t_struct(auctionData)1734_storage)": {
+            "label": "mapping(uint256 => struct Controller.auctionData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(auctionData)1734_storage": {
+            "label": "struct Controller.auctionData",
+            "members": [
+              {
+                "label": "intervals",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "percentageInterval",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "currencyDeposit",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "currencyLiquidation",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "poolAddress",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

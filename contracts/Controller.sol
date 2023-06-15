@@ -2,9 +2,16 @@
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./pool.sol";
 
-contract Controller {
+contract Controller is
+    Initializable,
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable
+{
     poolContract public auctionPool;
     uint256 public auctionId;
     address[] public deployments;
@@ -18,6 +25,10 @@ contract Controller {
     }
 
     mapping(uint256 => auctionData) public openAuctions;
+
+    function init() external initializer {
+        __Ownable_init();
+    }
 
     function createAuction(
         uint256 _liquidationPercentageInterval,
