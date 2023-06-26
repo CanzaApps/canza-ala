@@ -12,11 +12,10 @@ contract Controller is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
-    poolContract public auctionPool;
     uint256 public auctionId;
     address[] public deployments;
 
-    struct auctionData {
+    struct AuctionData {
         uint256 intervals;
         uint256 percentageInterval;
         address currencyDeposit;
@@ -24,7 +23,7 @@ contract Controller is
         address[] poolAddress;
     }
 
-    mapping(uint256 => auctionData) public openAuctions;
+    mapping(uint256 => AuctionData) public openAuctions;
 
     function init() external initializer {
         __Ownable_init();
@@ -37,26 +36,31 @@ contract Controller is
         address _currencyLiquidation
     ) public {
         uint256 liquidationPercentage;
-        openAuctions[auctionId].intervals = _intervals;
-        openAuctions[auctionId]
-            .percentageInterval = _liquidationPercentageInterval;
-        openAuctions[auctionId].currencyDeposit = _currencyDeposit;
-        openAuctions[auctionId].currencyLiquidation = _currencyLiquidation;
-
+        address[] memory poolAddresses = new address[](_intervals);
         for (uint256 i = 1; i < _intervals + 1; i++) {
             liquidationPercentage = _liquidationPercentageInterval * i;
 
-            auctionPool = new poolContract(
+            PoolContract auctionPool = new PoolContract(
                 liquidationPercentage,
                 _currencyDeposit,
                 _currencyLiquidation
             );
 
             address contractAddress = address(auctionPool);
-            openAuctions[auctionId].poolAddress.push(contractAddress);
+            poolAddresses[i - 1] = contractAddress;
 
             deployments.push(address(auctionPool));
         }
+
+        AuctionData memory auctionData = AuctionData({
+            intervals: _intervals,
+            percentageInterval: _liquidationPercentageInterval,
+            currencyDeposit: _currencyDeposit,
+            currencyLiquidation: _currencyLiquidation,
+            poolAddress: poolAddresses
+        });
+
+        openAuctions[auctionId] = auctionData;
 
         auctionId++;
     }
@@ -68,7 +72,7 @@ contract Controller is
     //Loop until done
 
     function liquidate(uint256 _amountToLiquidate, uint256 _auctionId) public {
-        poolContract activeContract;
+        PoolContract activeContract;
 
         uint256 runningBalance = _amountToLiquidate;
         uint256 auctionIntervals = openAuctions[_auctionId].intervals;
@@ -76,7 +80,7 @@ contract Controller is
 
         do {
             address _address = openAuctions[_auctionId].poolAddress[i];
-            activeContract = poolContract(_address);
+            activeContract = PoolContract(_address);
 
             uint256 depositTotal = activeContract.depositTotal();
 
@@ -111,7 +115,7 @@ contract Controller is
 
     function getAuctionDetails(
         uint256 _auctionId
-    ) public view returns (auctionData memory) {
+    ) public view returns (AuctionData memory) {
         return openAuctions[_auctionId];
     }
 
@@ -119,7 +123,7 @@ contract Controller is
         uint256 _amountToLiquidate,
         uint256 _auctionId
     ) public view returns (uint256 payout) {
-        poolContract activeContract;
+        PoolContract activeContract;
         uint256 runningBalance = _amountToLiquidate;
         uint256 auctionIntervals = openAuctions[_auctionId].intervals;
         uint256 i;
@@ -127,7 +131,7 @@ contract Controller is
 
         do {
             address _address = openAuctions[_auctionId].poolAddress[i];
-            activeContract = poolContract(_address);
+            activeContract = PoolContract(_address);
 
             uint256 depositTotal = activeContract.depositTotal();
 

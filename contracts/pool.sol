@@ -2,8 +2,9 @@
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract poolContract {
+contract PoolContract is Ownable {
     uint256 public liquidationPercentage;
     address public currencyDeposit;
     address public currencyLiquidation;
@@ -20,7 +21,9 @@ contract poolContract {
     address[] public users;
     mapping(address => bool) public onUserList;
 
-    address controllerAddress;
+    event Deposit(address indexed _participant, uint256 _amount);
+    event Withdraw(address indexed _participant, uint256 _amount);
+    event ClaimRewards(address indexed _participant, uint256 _amountPaid);
 
     constructor(
         uint256 _liquidationPercentage,
@@ -31,7 +34,6 @@ contract poolContract {
 
         currencyDeposit = _currencyDeposit;
         currencyLiquidation = _currencyLiquidation;
-        controllerAddress = msg.sender;
     }
 
     function deposit(uint256 _amount) public payable {
@@ -44,14 +46,16 @@ contract poolContract {
             users.push(msg.sender);
             onUserList[msg.sender] = true;
         }
+        emit Deposit(msg.sender, _amount);
     }
 
     function withdraw(uint256 _amount) public {
         require(_amount <= depositUser[msg.sender], "Not enough deposit");
-        _transferTo(_amount, msg.sender, currencyDeposit);
 
         depositUser[msg.sender] -= _amount;
         depositTotal -= _amount;
+        _transferTo(_amount, msg.sender, currencyDeposit);
+        emit Withdraw(msg.sender, _amount);
     }
 
     function calculatePayout(
@@ -66,9 +70,7 @@ contract poolContract {
     }
 
     //@DEV-TODO needs only owner lock
-    function releaseDeposits(uint256 _amountToLiquidate) public {
-        require(msg.sender == controllerAddress, "Not Controller");
-        require(_amountToLiquidate <= depositTotal, "Trying to Over Liquidate");
+    function releaseDeposits(uint256 _amountToLiquidate) public onlyOwner {
 
         _amountToLiquidate = Math.min(_amountToLiquidate, depositTotal);
 
@@ -76,8 +78,7 @@ contract poolContract {
     }
 
     //@DEV-TODO: Needs only owner lock
-    function payCollateral(uint256 _amountToLiquidate) public payable {
-        require(msg.sender == controllerAddress, "Not Controller");
+    function payCollateral(uint256 _amountToLiquidate) public onlyOwner {
         if (depositTotal != 0) {
             uint256 payout = calculatePayout(_amountToLiquidate);
 
@@ -104,21 +105,16 @@ contract poolContract {
 
     function claimRewards() public {
         uint256 claimAmount = claimeableUser[msg.sender];
-        _transferTo(claimAmount, msg.sender, currencyLiquidation);
 
         claimableTotal -= claimAmount;
         claimeableUser[msg.sender] = 0;
+        _transferTo(claimAmount, msg.sender, currencyLiquidation);
+        emit ClaimRewards(msg.sender, claimAmount);
     }
 
     function _transferFrom(uint256 _amount, address _currency) internal {
-        address currency = _currency;
 
-        require(
-            IERC20(currency).balanceOf(msg.sender) >= _amount,
-            "Insufficient balance"
-        );
-
-        bool transferSuccess = IERC20(currency).transferFrom(
+        bool transferSuccess = IERC20(_currency).transferFrom(
             msg.sender,
             address(this),
             _amount
@@ -132,13 +128,7 @@ contract poolContract {
         address _user,
         address _currency
     ) internal {
-        address currency = _currency;
-
-        require(
-            IERC20(currency).balanceOf(address(this)) >= _amount,
-            "Insufficient Balance"
-        );
-        bool transferSuccess = IERC20(currency).transfer(_user, _amount);
+        bool transferSuccess = IERC20(_currency).transfer(_user, _amount);
 
         if (!transferSuccess) revert();
     }
