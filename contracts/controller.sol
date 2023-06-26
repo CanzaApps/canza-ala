@@ -13,7 +13,6 @@ contract Controller is
     OwnableUpgradeable
 {
     uint256 public auctionId;
-    address[] public deployments;
 
     struct AuctionData {
         uint256 intervals;
@@ -48,8 +47,6 @@ contract Controller is
 
             address contractAddress = address(auctionPool);
             poolAddresses[i - 1] = contractAddress;
-
-            deployments.push(address(auctionPool));
         }
 
         AuctionData memory auctionData = AuctionData({
@@ -107,10 +104,6 @@ contract Controller is
         uint256 _loanId
     ) public view returns (address[] memory) {
         return openAuctions[_loanId].poolAddress;
-    }
-
-    function getdeploymentList() public view returns (address[] memory) {
-        return deployments;
     }
 
     function getAuctionDetails(
