@@ -12,7 +12,7 @@ contract PoolContract is Ownable {
     uint256 basisPoints = 10000;
 
     mapping(address => uint256) public depositUser;
-    mapping(address => uint256) public claimeableUser;
+    mapping(address => uint256) public claimableUser;
 
     uint256 public claimableTotal;
     uint256 public depositTotal;
@@ -61,10 +61,10 @@ contract PoolContract is Ownable {
     function calculatePayout(
         uint256 _amountToLiquidate
     ) public view returns (uint256) {
-        uint256 amountToLiquidate = Math.min(_amountToLiquidate, depositTotal);
-        uint256 payout = (amountToLiquidate * liquidationPercentage) /
+        // uint256 amountToLiquidate = Math.min(_amountToLiquidate, depositTotal);
+        uint256 payout = (_amountToLiquidate * liquidationPercentage) /
             basisPoints;
-        payout += amountToLiquidate;
+        payout += _amountToLiquidate;
 
         return payout;
     }
@@ -73,6 +73,8 @@ contract PoolContract is Ownable {
     function releaseDeposits(uint256 _amountToLiquidate) public onlyOwner {
 
         _amountToLiquidate = Math.min(_amountToLiquidate, depositTotal);
+
+        depositTotal -= _amountToLiquidate;
 
         _transferTo(_amountToLiquidate, msg.sender, currencyDeposit);
     }
@@ -88,7 +90,7 @@ contract PoolContract is Ownable {
                 uint256 y = (payout * depositUser[userAddress] * 1000) /
                     depositTotal;
                 y = y / 1000;
-                claimeableUser[userAddress] += y;
+                claimableUser[userAddress] += y;
 
                 uint256 x = (_amountToLiquidate *
                     depositUser[userAddress] *
@@ -97,17 +99,16 @@ contract PoolContract is Ownable {
                 depositUser[userAddress] -= x;
             }
 
-            depositTotal -= _amountToLiquidate;
             claimableTotal += payout;
             liqudationsTotal += payout;
         }
     }
 
     function claimRewards() public {
-        uint256 claimAmount = claimeableUser[msg.sender];
+        uint256 claimAmount = claimableUser[msg.sender];
 
         claimableTotal -= claimAmount;
-        claimeableUser[msg.sender] = 0;
+        claimableUser[msg.sender] = 0;
         _transferTo(claimAmount, msg.sender, currencyLiquidation);
         emit ClaimRewards(msg.sender, claimAmount);
     }
