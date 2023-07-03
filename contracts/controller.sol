@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./pool.sol";
+import "./interface/ICollateralPoolProvider.sol";
 
 contract Controller is
     Initializable,
@@ -15,6 +16,8 @@ contract Controller is
     poolContract public auctionPool;
     uint256 public auctionId;
     address[] public deployments;
+    ICollateralPoolProvider collateralProvider;
+
 
     struct auctionData {
         uint256 intervals;
@@ -24,9 +27,17 @@ contract Controller is
         address[] poolAddress;
     }
 
+     struct PayoutInfo {
+            address poolAddress;
+            uint256 payoutAmount;
+            address currency;
+            uint256 liquidateAmount;
+        }
+
     mapping(uint256 => auctionData) public openAuctions;
 
-    function init() external initializer {
+    function init(address collateralProviderPoolAddress) external initializer {
+        collateralProvider = ICollateralPoolProvider(collateralProviderPoolAddress);
         __Ownable_init();
     }
 
@@ -67,12 +78,17 @@ contract Controller is
     //Subtract from running balance (remaining to liquidate)
     //Loop until done
 
-    function liquidate(uint256 _amountToLiquidate, uint256 _auctionId) public {
+    function liquidate(uint256 _amountToLiquidate, uint256 _auctionId) external onlyOwner {
         poolContract activeContract;
 
         uint256 runningBalance = _amountToLiquidate;
         uint256 auctionIntervals = openAuctions[_auctionId].intervals;
         uint256 i;
+        uint256 totalLiquidateAmount = 0;
+        uint256 totalPayout = 0;
+
+        PayoutInfo[] memory payoutInfo = new PayoutInfo[](auctionIntervals);
+        uint256 payoutInfoLength = 0;
 
         do {
             address _address = openAuctions[_auctionId].poolAddress[i];
@@ -83,20 +99,32 @@ contract Controller is
             uint256 x = Math.min(depositTotal, runningBalance);
 
             uint256 payout = activeContract.calculatePayout(x);
+            address currency = activeContract.currencyLiquidation();
+
+            //Store payout information
+             payoutInfo[payoutInfoLength] = PayoutInfo(_address, payout, currency, x);
+             payoutInfoLength++;
+
+            totalLiquidateAmount += x;
+            totalPayout += payout;
 
             activeContract.releaseDeposits(x);
-
-            //This is where it would call liquidation function and send deposit
-
-            address currency = activeContract.currencyLiquidation();
-            _transferTo(payout, _address, currency);
-
-            activeContract.payCollateral(x);
 
             runningBalance -= x;
 
             i++;
         } while (runningBalance > 0 && i < auctionIntervals);
+       
+       //Call collateral provider to release reward
+        collateralProvider.releaseReward(totalPayout);
+        
+        //Pay the different pool
+        for(uint256 j = 0; j < payoutInfoLength; j++) {
+            activeContract = poolContract(payoutInfo[j].poolAddress);
+            _transferTo(payoutInfo[j].payoutAmount, payoutInfo[j].poolAddress, payoutInfo[j].currency);
+            activeContract.payCollateral(payoutInfo[j].liquidateAmount);
+        }
+
     }
 
     function getPoolAddress(
